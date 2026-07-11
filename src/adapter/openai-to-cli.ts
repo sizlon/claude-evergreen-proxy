@@ -16,19 +16,14 @@ export interface CliInput {
 }
 
 const MODEL_MAP: Record<string, ClaudeModel> = {
-  // Direct model names (provider prefixes like `claude-code-cli/` and `claude-max/`
-  // are stripped by extractModel before consulting this map)
-  "claude-opus-4": "opus",
-  "claude-opus-4-6": "opus",
-  "claude-sonnet-4": "sonnet",
-  "claude-sonnet-4-5": "sonnet",
-  "claude-sonnet-4-6": "sonnet",
-  "claude-haiku-4": "haiku",
-  "claude-haiku-4-5": "haiku",
-  // Bare aliases
+  // Bare aliases → the CLI resolves each to the current model in its family.
+  // Versioned ids (claude-sonnet-5, claude-opus-4-8, …) are intentionally NOT
+  // listed here: extractModel passes them through verbatim so callers pin an
+  // exact version instead of a drifting alias.
   "opus": "opus",
   "sonnet": "sonnet",
   "haiku": "haiku",
+  "fable": "claude-fable-5",
   "opus-max": "opus",
   "sonnet-max": "sonnet",
 };
@@ -48,14 +43,17 @@ export function extractModel(model: string): ClaudeModel {
     return MODEL_MAP[stripped];
   }
 
-  // Pass explicit versioned Claude model ids (e.g. claude-sonnet-5) straight
-  // through to the CLI so callers can pin an exact version instead of a
-  // drifting bare alias. The CLI validates the id and errors on unknown ones.
-  if (/^claude-(opus|sonnet|haiku)-\d[\w.-]*$/.test(stripped)) {
+  // Pass any explicit versioned Claude model id — `claude-<family>-<version>`,
+  // e.g. claude-sonnet-5, claude-opus-4-8, claude-fable-5 — straight through to
+  // the CLI so callers pin an exact version instead of a drifting alias. The CLI
+  // validates the id and errors on unknown ones.
+  if (/^claude-[a-z]+-[\w.-]+$/.test(stripped)) {
     return stripped;
   }
 
-  // Default to opus (Claude Max subscription)
+  // Fallback: strongest available model. Logged so a typo'd/unknown id is visible
+  // instead of silently running Opus.
+  console.error(`[claude-max-api-proxy] unknown model "${model}" — falling back to opus`);
   return "opus";
 }
 

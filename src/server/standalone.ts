@@ -14,6 +14,15 @@ import { verifyClaude, verifyAuth } from "../subprocess/manager.js";
 const DEFAULT_PORT = 3456;
 
 async function main(): Promise<void> {
+  // Subcommand: probe candidate model ids against the CLI and write the working
+  // ones to models.json (served at GET /v1/models). Usage:
+  //   node dist/server/standalone.js probe-models [id ...]
+  if (process.argv[2] === "probe-models") {
+    const { probeAndWrite } = await import("../models.js");
+    await probeAndWrite(process.argv.slice(3));
+    return;
+  }
+
   console.log("Claude Code CLI Provider - Standalone Server");
   console.log("============================================\n");
 

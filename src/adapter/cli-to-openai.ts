@@ -68,12 +68,13 @@ export function createDoneChunk(requestId: string, model: string): OpenAIChatChu
 export function cliResultToOpenai(
   result: ClaudeCliResult,
   requestId: string,
+  model?: string,
   toolCalls?: OpenAIToolCall[]
 ): OpenAIChatResponse {
-  // Get model from modelUsage or default
-  const modelName = result.modelUsage
-    ? Object.keys(result.modelUsage)[0]
-    : "claude-sonnet-4";
+  // Echo the requested/resolved model. Fall back to modelUsage only if not given.
+  // (modelUsage's first key can be a sub-task model like haiku, so it is unreliable.)
+  const modelName =
+    model || (result.modelUsage ? Object.keys(result.modelUsage)[0] : "claude-sonnet-5");
 
   const message: OpenAIChatResponse["choices"][0]["message"] = {
     role: "assistant",
@@ -106,13 +107,11 @@ export function cliResultToOpenai(
 }
 
 /**
- * Normalize Claude model names to a consistent format
- * e.g., "claude-sonnet-4-5-20250929" -> "claude-sonnet-4"
+ * Echo the actual model the CLI reported, verbatim — do not collapse the version.
+ * The CLI's modelUsage/message.model already carries the real id (e.g.
+ * "claude-sonnet-5"), so returning it as-is keeps the response's `model` field
+ * honest for observability.
  */
 function normalizeModelName(model: string | undefined): string {
-  if (!model) return "claude-sonnet-4";
-  if (model.includes("opus")) return "claude-opus-4";
-  if (model.includes("sonnet")) return "claude-sonnet-4";
-  if (model.includes("haiku")) return "claude-haiku-4";
-  return model;
+  return model || "claude-sonnet-5";
 }

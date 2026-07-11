@@ -130,16 +130,33 @@ curl -N -X POST http://localhost:3456/v1/chat/completions \
 
 ## Available Models
 
-| Model ID | Alias | CLI Model |
-|----------|-------|-----------|
-| `claude-opus-4` | `opus` | Claude Opus |
-| `claude-sonnet-4` | `sonnet` | Claude Sonnet |
-| `claude-sonnet-5` | — | Claude Sonnet 5 (explicit, pinned) |
-| `claude-haiku-4` | `haiku` | Claude Haiku |
+Bare aliases resolve to the current model in each family; explicit versioned ids pin an exact version.
 
-All model IDs also accept a `claude-code-cli/` prefix (e.g., `claude-code-cli/claude-opus-4`).
+| Request | Resolves to |
+|---------|-------------|
+| `opus` / `sonnet` / `haiku` / `fable` | the current model in that family (resolved by the CLI) |
+| `claude-<family>-<version>` — e.g. `claude-sonnet-5`, `claude-opus-4-8`, `claude-fable-5` | that exact version, passed straight through to the CLI's `--model` |
 
-**Explicit version pinning (this fork):** requesting an explicit versioned Claude id — `claude-<family>-<version>`, e.g. `claude-sonnet-5` — passes it straight through to the CLI's `--model`, so you pin an exact version instead of a drifting bare alias (`sonnet` currently resolves to `claude-sonnet-5`). Bare aliases (`opus`/`sonnet`/`haiku`) still work; other unknown models default to Opus.
+All ids also accept a `claude-code-cli/` prefix. An unknown id logs a warning and falls back to `opus`. Requests are **not** restricted to the advertised list — the pass-through lets you request any id the CLI accepts.
+
+### Advertised model list (`GET /v1/models`)
+
+Resolved in priority order:
+
+1. **`CLAUDE_PROXY_MODELS`** env var — comma/space separated, e.g. `CLAUDE_PROXY_MODELS="claude-opus-4-8,claude-sonnet-5"`
+2. **`models.json`** — written by the `probe-models` command (below)
+3. a built-in current-lineup default
+
+### Discovering models the CLI accepts (`probe-models`)
+
+The CLI has no machine-readable model list, so this command tests candidate ids against it and records only the working ones (retired/unavailable models are skipped):
+
+```bash
+node dist/server/standalone.js probe-models          # probe the built-in candidate set
+node dist/server/standalone.js probe-models claude-opus-4-8 claude-sonnet-5   # probe specific ids
+```
+
+It writes the accepted ids to `models.json`, which the server then serves at `/v1/models`.
 
 ## Configuration with Popular Tools
 

@@ -8,6 +8,7 @@ import type { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { ClaudeSubprocess } from "../subprocess/manager.js";
 import { openaiToCli } from "../adapter/openai-to-cli.js";
+import { resolveModels } from "../models.js";
 import {
   cliResultToOpenai,
   createDoneChunk,
@@ -103,7 +104,7 @@ async function handleStreamingResponse(
 
   return new Promise<void>((resolve, reject) => {
     let isFirst = true;
-    let lastModel = "claude-sonnet-4";
+    let lastModel = cliInput.model;
     let isComplete = false;
     let hasEmittedText = false;
     let toolCallIndex = 0;
@@ -235,11 +236,6 @@ async function handleStreamingResponse(
     //   }
     // });
 
-    // Handle final assistant message (for model name)
-    subprocess.on("assistant", (message: ClaudeCliAssistant) => {
-      lastModel = message.message.model;
-    });
-
     subprocess.on("result", (result: ClaudeCliResult) => {
       isComplete = true;
       if (!res.writableEnded) {
@@ -346,7 +342,7 @@ async function handleNonStreamingResponse(
 
     subprocess.on("close", (code: number | null) => {
       if (finalResult) {
-        res.json(cliResultToOpenai(finalResult, requestId));
+        res.json(cliResultToOpenai(finalResult, requestId, cliInput.model));
       } else if (!res.headersSent) {
         res.status(500).json({
           error: {
@@ -385,16 +381,8 @@ async function handleNonStreamingResponse(
  */
 export function handleModels(_req: Request, res: Response): void {
   const now = Math.floor(Date.now() / 1000);
-  const modelIds = [
-    "claude-opus-4",
-    "claude-opus-4-6",
-    "claude-sonnet-4",
-    "claude-sonnet-4-5",
-    "claude-sonnet-4-6",
-    "claude-sonnet-5",
-    "claude-haiku-4",
-    "claude-haiku-4-5",
-  ];
+  // Resolved from CLAUDE_PROXY_MODELS env > models.json (probe-models) > default.
+  const modelIds = resolveModels();
   res.json({
     object: "list",
     data: modelIds.map((id) => ({
