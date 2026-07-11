@@ -7,39 +7,38 @@
 
 import { startServer, stopServer, getServer } from "./server/index.js";
 import { verifyClaude, verifyAuth } from "./subprocess/manager.js";
+import { resolveModels } from "./models.js";
 
 // Provider constants
 const PROVIDER_ID = "claude-code-cli";
 const PROVIDER_LABEL = "Claude Code CLI";
 const DEFAULT_PORT = 3456;
-const DEFAULT_MODEL = "claude-code-cli/claude-sonnet-4";
 
-// Available models
-const AVAILABLE_MODELS = [
-  {
-    id: "claude-opus-4",
-    name: "Claude Opus 4.5",
-    alias: "opus",
-    reasoning: true,
-  },
-  {
-    id: "claude-sonnet-4",
-    name: "Claude Sonnet 4",
-    alias: "sonnet",
-    reasoning: false,
-  },
-  {
-    id: "claude-haiku-4",
-    name: "Claude Haiku 4",
-    alias: "haiku",
-    reasoning: false,
-  },
-];
+interface ModelDef {
+  id: string;
+  name: string;
+  reasoning: boolean;
+}
+
+/**
+ * Model list for the plugin config, derived from the live registry (resolveModels:
+ * env > models.json). Falls back to bare aliases — which never go stale — when the
+ * registry has not been populated yet. No hardcoded lineup here.
+ */
+function availableModels(): ModelDef[] {
+  const ids = resolveModels();
+  const list = ids.length ? ids : ["opus", "sonnet", "haiku"];
+  return list.map((id) => ({ id, name: id, reasoning: /opus/.test(id) }));
+}
+
+function defaultModelId(): string {
+  return `${PROVIDER_ID}/${availableModels()[0].id}`;
+}
 
 /**
  * Build model definitions for Clawdbot config
  */
-function buildModelDefinition(model: (typeof AVAILABLE_MODELS)[number]) {
+function buildModelDefinition(model: ModelDef) {
   return {
     id: model.id,
     name: model.name,
@@ -158,14 +157,14 @@ const claudeCodeCliPlugin = {
                         apiKey: "local",
                         api: "openai-completions",
                         authHeader: false,
-                        models: AVAILABLE_MODELS.map(buildModelDefinition),
+                        models: availableModels().map(buildModelDefinition),
                       },
                     },
                   },
                   agents: {
                     defaults: {
                       models: Object.fromEntries(
-                        AVAILABLE_MODELS.map((m) => [
+                        availableModels().map((m) => [
                           `${PROVIDER_ID}/${m.id}`,
                           {},
                         ])
@@ -173,7 +172,7 @@ const claudeCodeCliPlugin = {
                     },
                   },
                 },
-                defaultModel: DEFAULT_MODEL,
+                defaultModel: defaultModelId(),
                 notes: [
                   "This uses your Claude Max subscription via Claude Code CLI.",
                   "Your OAuth token is used by the CLI, not exposed directly.",

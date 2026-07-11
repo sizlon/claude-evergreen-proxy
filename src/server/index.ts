@@ -7,6 +7,7 @@
 import express, { Express, Request, Response, NextFunction } from "express";
 import { createServer, Server } from "http";
 import { handleChatCompletions, handleModels, handleHealth } from "./routes.js";
+import { scheduleModelRefresh } from "../models.js";
 
 export interface ServerConfig {
   port: number;
@@ -128,6 +129,9 @@ export async function startServer(config: ServerConfig): Promise<Server> {
     serverInstance.listen(port, host, () => {
       console.log(`[Server] Claude Code CLI provider running at http://${host}:${port}`);
       console.log(`[Server] OpenAI-compatible endpoint: http://${host}:${port}/v1/chat/completions`);
+      // Keep the advertised /v1/models list current: refresh on start if stale,
+      // then at most once per day. No-op when pinned via CLAUDE_PROXY_MODELS.
+      scheduleModelRefresh();
       resolve(serverInstance!);
     });
   });

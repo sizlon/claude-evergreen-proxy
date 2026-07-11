@@ -74,7 +74,7 @@ export function cliResultToOpenai(
   // Echo the requested/resolved model. Fall back to modelUsage only if not given.
   // (modelUsage's first key can be a sub-task model like haiku, so it is unreliable.)
   const modelName =
-    model || (result.modelUsage ? Object.keys(result.modelUsage)[0] : "claude-sonnet-5");
+    model || (result.modelUsage ? Object.keys(result.modelUsage)[0] : "");
 
   const message: OpenAIChatResponse["choices"][0]["message"] = {
     role: "assistant",
@@ -113,5 +113,5 @@ export function cliResultToOpenai(
  * honest for observability.
  */
 function normalizeModelName(model: string | undefined): string {
-  return model || "claude-sonnet-5";
+  return model || "";
 }

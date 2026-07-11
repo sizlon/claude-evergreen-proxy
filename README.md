@@ -137,28 +137,28 @@ Bare aliases resolve to the current model in each family; explicit versioned ids
 | `opus` / `sonnet` / `haiku` / `fable` | the current model in that family (resolved by the CLI) |
 | `claude-<family>-<version>` — e.g. `claude-sonnet-5`, `claude-opus-4-8`, `claude-fable-5` | that exact version, passed straight through to the CLI's `--model` |
 
-All ids also accept a `claude-code-cli/` prefix. An unknown id logs a warning and falls back to `opus`. Requests are **not** restricted to the advertised list — the pass-through lets you request any id the CLI accepts.
+All ids also accept a `claude-code-cli/` prefix. Requests are **never** restricted to the advertised list — the model string is passed straight to the CLI, which resolves aliases/versions and errors on unknown ids. No model names are hardcoded anywhere.
 
 ### Advertised model list (`GET /v1/models`)
 
-Resolved in priority order:
+The CLI has no machine-readable model list, so the proxy **discovers** ids from the CLI and **probes** each (actually invokes it) to keep only the ones that work. Resolved in priority order:
 
-1. **`CLAUDE_PROXY_MODELS`** env var — comma/space separated, e.g. `CLAUDE_PROXY_MODELS="claude-opus-4-8,claude-sonnet-5"`
-2. **`models.json`** — written by the `probe-models` command (below)
-3. a built-in default (`DEFAULT_MODELS` in `src/models.ts`) — the server works out of the box with no setup; keep this current as models change
+1. **`CLAUDE_PROXY_MODELS`** env var — comma/space separated, e.g. `CLAUDE_PROXY_MODELS="claude-opus-4-8,claude-sonnet-5"`. Pins the list and disables auto-refresh.
+2. **`models.json`** — the discovered+probed cache (git-ignored; environment-specific).
+3. empty — until one of the above is populated.
 
-### Discovering models the CLI accepts (`probe-models`)
+**Auto-refresh:** on server start, if `models.json` is missing or older than a day, the proxy discovers+probes in the background and writes it, then re-checks once per day. The list self-updates as models are retired/added, with zero hardcoded names. (No-op when pinned via `CLAUDE_PROXY_MODELS`.)
 
-The CLI has no machine-readable model list, so this command tests candidate ids against it and records only the working ones (retired/unavailable models are skipped):
+### `probe-models` (manual refresh)
+
+Populate or refresh `models.json` on demand:
 
 ```bash
-node dist/server/standalone.js probe-models          # probe the built-in candidate set
+node dist/server/standalone.js probe-models          # discover ids from the CLI, then probe each
 node dist/server/standalone.js probe-models claude-opus-4-8 claude-sonnet-5   # probe specific ids
 ```
 
-It writes the accepted ids to `models.json`, which the server then serves at `/v1/models`.
-
-`probe-models` is **optional** — the built-in default already works. Run it when you want `/v1/models` to exactly match the CLI/account you're on. `models.json` is **git-ignored** on purpose: it's environment-specific (model access varies by account, and the lineup changes over time), so each environment generates its own.
+With no args it asks the CLI for its current ids, probes each, and writes the working ones (retired/unavailable ids are skipped). `models.json` is **git-ignored** on purpose — it's environment-specific (access varies by account, and the lineup changes over time).
 
 ## Configuration with Popular Tools
 
