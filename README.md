@@ -145,7 +145,7 @@ Resolved in priority order:
 
 1. **`CLAUDE_PROXY_MODELS`** env var — comma/space separated, e.g. `CLAUDE_PROXY_MODELS="claude-opus-4-8,claude-sonnet-5"`
 2. **`models.json`** — written by the `probe-models` command (below)
-3. a built-in current-lineup default
+3. a built-in default (`DEFAULT_MODELS` in `src/models.ts`) — the server works out of the box with no setup; keep this current as models change
 
 ### Discovering models the CLI accepts (`probe-models`)
 
@@ -157,6 +157,8 @@ node dist/server/standalone.js probe-models claude-opus-4-8 claude-sonnet-5   # 
 ```
 
 It writes the accepted ids to `models.json`, which the server then serves at `/v1/models`.
+
+`probe-models` is **optional** — the built-in default already works. Run it when you want `/v1/models` to exactly match the CLI/account you're on. `models.json` is **git-ignored** on purpose: it's environment-specific (model access varies by account, and the lineup changes over time), so each environment generates its own.
 
 ## Configuration with Popular Tools
 
