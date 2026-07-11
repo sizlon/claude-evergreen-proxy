@@ -4,7 +4,10 @@
 
 import type { OpenAIChatRequest, OpenAIContentBlock } from "../types/openai.js";
 
-export type ClaudeModel = "opus" | "sonnet" | "haiku";
+// Bare CLI aliases ("opus"/"sonnet"/"haiku") plus explicit versioned model ids
+// (e.g. "claude-sonnet-5"). Kept as string so callers can pin an exact version
+// instead of riding a drifting bare alias.
+export type ClaudeModel = string;
 
 export interface CliInput {
   prompt: string;
@@ -43,6 +46,13 @@ export function extractModel(model: string): ClaudeModel {
   const stripped = model.replace(/^(?:claude-code-cli|claude-max)\//, "");
   if (MODEL_MAP[stripped]) {
     return MODEL_MAP[stripped];
+  }
+
+  // Pass explicit versioned Claude model ids (e.g. claude-sonnet-5) straight
+  // through to the CLI so callers can pin an exact version instead of a
+  // drifting bare alias. The CLI validates the id and errors on unknown ones.
+  if (/^claude-(opus|sonnet|haiku)-\d[\w.-]*$/.test(stripped)) {
+    return stripped;
   }
 
   // Default to opus (Claude Max subscription)
