@@ -8,11 +8,14 @@ import type { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { ClaudeSubprocess } from "../subprocess/manager.js";
 import { openaiToCli } from "../adapter/openai-to-cli.js";
+import { anthropicToCli } from "../adapter/anthropic-to-cli.js";
+import type { AnthropicMessagesRequest } from "../adapter/anthropic-to-cli.js";
 import { resolveModels } from "../models.js";
 import {
   cliResultToOpenai,
   createDoneChunk,
 } from "../adapter/cli-to-openai.js";
+import { cliResultToAnthropic, anthropicStreamEvents } from "../adapter/cli-to-anthropic.js";
 import type { OpenAIChatRequest, OpenAIToolCall } from "../types/openai.js";
 import type { ClaudeCliAssistant, ClaudeCliResult, ClaudeCliStreamEvent } from "../types/claude-cli.js";
 
@@ -64,6 +67,74 @@ export async function handleChatCompletions(
         },
       });
     }
+  }
+}
+
+/**
+ * Handle POST /v1/messages — Anthropic Messages API.
+ *
+ * Same CLI backend as the OpenAI endpoint; only the request/response shapes
+ * differ. Non-streaming returns a full Messages body; streaming emits the
+ * standard Anthropic SSE event sequence (the CLI result as one text_delta).
+ */
+export async function handleMessages(req: Request, res: Response): Promise<void> {
+  const requestId = uuidv4().replace(/-/g, "").slice(0, 24);
+  const body = req.body as AnthropicMessagesRequest;
+  const stream = body.stream === true;
+
+  const fail = (code: number, type: string, message: string): void => {
+    if (!res.headersSent) {
+      res.status(code).json({ type: "error", error: { type, message } });
+    }
+  };
+
+  try {
+    if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
+      fail(400, "invalid_request_error", "messages is required and must be a non-empty array");
+      return;
+    }
+
+    const cliInput = anthropicToCli(body);
+    const subprocess = new ClaudeSubprocess();
+
+    await new Promise<void>((resolve) => {
+      let finalResult: ClaudeCliResult | null = null;
+
+      subprocess.on("result", (result: ClaudeCliResult) => {
+        finalResult = result;
+      });
+      subprocess.on("error", (error: Error) => {
+        console.error("[handleMessages] Error:", error.message);
+        fail(500, "api_error", error.message);
+        resolve();
+      });
+      subprocess.on("close", (code: number | null) => {
+        if (finalResult) {
+          if (stream) {
+            res.setHeader("Content-Type", "text/event-stream");
+            res.setHeader("Cache-Control", "no-cache");
+            res.setHeader("Connection", "keep-alive");
+            res.write(anthropicStreamEvents(finalResult, requestId, cliInput.model));
+            res.end();
+          } else {
+            res.json(cliResultToAnthropic(finalResult, requestId, cliInput.model));
+          }
+        } else {
+          fail(500, "api_error", `Claude CLI exited with code ${code} without response`);
+        }
+        resolve();
+      });
+
+      subprocess
+        .start(cliInput.prompt, { model: cliInput.model, sessionId: cliInput.sessionId })
+        .catch((error: Error) => {
+          console.error("[handleMessages] start failed:", error.message);
+          fail(500, "api_error", error.message);
+          resolve();
+        });
+    });
+  } catch (error) {
+    fail(500, "api_error", error instanceof Error ? error.message : "Unknown error");
   }
 }
 

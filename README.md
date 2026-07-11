@@ -4,7 +4,7 @@
 
 **Use your Claude Max subscription ($200/month) with any OpenAI-compatible client — no separate API costs!**
 
-This proxy wraps the Claude Code CLI as a subprocess and exposes an OpenAI-compatible HTTP API, allowing tools like OpenClaw, Continue.dev, or any OpenAI-compatible client to use your Claude Max subscription instead of paying per-API-call.
+This proxy wraps the Claude Code CLI as a subprocess and exposes both an **OpenAI-compatible** (`POST /v1/chat/completions`) and an **Anthropic-compatible** (`POST /v1/messages`) HTTP API, so any OpenAI or Anthropic client can use your Claude Max subscription instead of paying per-API-call.
 
 ## Why This Exists
 
@@ -36,8 +36,9 @@ Your App (OpenClaw, Continue.dev, etc.)
 
 ## Features
 
-- **OpenAI-compatible API** — Works with any client that supports OpenAI's API format
-- **Streaming support** — Real-time token streaming via Server-Sent Events
+- **OpenAI-compatible API** — `POST /v1/chat/completions` for any OpenAI client
+- **Anthropic-compatible API** — `POST /v1/messages` (Messages API) for any Anthropic client
+- **Streaming support** — Server-Sent Events for both endpoints
 - **Multiple models** — Claude Opus, Sonnet, and Haiku with flexible model aliases
 - **OpenClaw integration** — Automatic tool name mapping and system prompt adaptation
 - **Content block handling** — Proper text block separators for multi-block responses
@@ -126,7 +127,8 @@ curl -N -X POST http://localhost:3456/v1/chat/completions \
 |----------|--------|-------------|
 | `/health` | GET | Health check |
 | `/v1/models` | GET | List available models |
-| `/v1/chat/completions` | POST | Chat completions (streaming & non-streaming) |
+| `/v1/chat/completions` | POST | OpenAI chat completions (streaming & non-streaming) |
+| `/v1/messages` | POST | Anthropic Messages API (streaming & non-streaming) |
 
 ## Available Models
 
