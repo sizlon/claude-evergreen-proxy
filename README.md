@@ -1,6 +1,6 @@
 # Claude Evergreen Proxy
 
-[![CI](https://github.com/sizlon/claude-evergreen-proxy/actions/workflows/ci.yml/badge.svg)](https://github.com/sizlon/claude-evergreen-proxy/actions/workflows/ci.yml)
+[![CI](https://github.com/ngenieer/claude-evergreen-proxy/actions/workflows/ci.yml/badge.svg)](https://github.com/ngenieer/claude-evergreen-proxy/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 > A self-updating fork of [atalovesyou/claude-max-api-proxy](https://github.com/atalovesyou/claude-max-api-proxy) (via [wende](https://github.com/wende/claude-max-api-proxy)). Its model registry **discovers** the CLI's current models, **probes** them, and **refreshes daily** — so the model list stays current with no hardcoded names and no manual updates. (Plus OpenClaw integration and improved streaming from upstream.)
@@ -73,7 +73,7 @@ Your App (OpenClaw, Continue.dev, etc.)
 ### Install globally from GitHub (recommended)
 
 ```bash
-npm install -g github:sizlon/claude-evergreen-proxy
+npm install -g github:ngenieer/claude-evergreen-proxy
 ```
 
 This builds automatically on install (via the `prepare` script) and puts the `claude-evergreen` command on your PATH:
@@ -86,14 +86,14 @@ claude-evergreen --help    # all commands and env vars
 To pin a release instead of tracking `main`:
 
 ```bash
-npm install -g github:sizlon/claude-evergreen-proxy#v1.1.0
+npm install -g github:ngenieer/claude-evergreen-proxy#v1.1.0
 ```
 
 ### Or clone and build
 
 ```bash
 # Clone the repository
-git clone https://github.com/sizlon/claude-evergreen-proxy.git
+git clone https://github.com/ngenieer/claude-evergreen-proxy.git
 cd claude-evergreen-proxy
 
 # Install dependencies (also builds via the prepare script)

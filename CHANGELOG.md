@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `prepare` script: the package now builds automatically on install, enabling
-  `npm install -g github:sizlon/claude-evergreen-proxy` (documented in the README).
+  `npm install -g github:ngenieer/claude-evergreen-proxy` (documented in the README).
 
 ## [1.1.0] - 2026-07-12
 
@@ -66,6 +66,6 @@ Baseline release as **claude-evergreen-proxy** (fork of
   OpenAI-compatible `POST /v1/chat/completions`, both with streaming.
 - OpenClaw integration: tool-name mapping and system-prompt adaptation.
 
-[Unreleased]: https://github.com/sizlon/claude-evergreen-proxy/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/sizlon/claude-evergreen-proxy/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/sizlon/claude-evergreen-proxy/releases/tag/v1.0.0
+[Unreleased]: https://github.com/ngenieer/claude-evergreen-proxy/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/ngenieer/claude-evergreen-proxy/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/ngenieer/claude-evergreen-proxy/releases/tag/v1.0.0

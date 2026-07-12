@@ -38,12 +38,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sizlon/claude-evergreen-proxy"
+    "url": "https://github.com/ngenieer/claude-evergreen-proxy"
   },
   "bugs": {
-    "url": "https://github.com/sizlon/claude-evergreen-proxy/issues"
+    "url": "https://github.com/ngenieer/claude-evergreen-proxy/issues"
   },
-  "homepage": "https://github.com/sizlon/claude-evergreen-proxy#readme",
+  "homepage": "https://github.com/ngenieer/claude-evergreen-proxy#readme",
   "dependencies": {
     "express": "^4.21.2",
     "uuid": "^11.0.5"
