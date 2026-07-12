@@ -1,6 +1,6 @@
 {
   "name": "claude-evergreen-proxy",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Use your Claude Max subscription with any OpenAI-compatible client. Wraps Claude Code CLI as an OpenAI-compatible API server with a self-updating model registry (no manual model maintenance).",
   "type": "module",
   "main": "dist/index.js",

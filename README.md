@@ -1,5 +1,8 @@
 # Claude Evergreen Proxy
 
+[![CI](https://github.com/sizlon/claude-evergreen-proxy/actions/workflows/ci.yml/badge.svg)](https://github.com/sizlon/claude-evergreen-proxy/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > A self-updating fork of [atalovesyou/claude-max-api-proxy](https://github.com/atalovesyou/claude-max-api-proxy) (via [wende](https://github.com/wende/claude-max-api-proxy)). Its model registry **discovers** the CLI's current models, **probes** them, and **refreshes daily** — so the model list stays current with no hardcoded names and no manual updates. (Plus OpenClaw integration and improved streaming from upstream.)
 
 **Use your Claude Max subscription ($200/month) with any OpenAI-compatible client — no separate API costs!**
@@ -315,6 +318,8 @@ which claude
 ## Contributing
 
 Contributions welcome! Please submit PRs with tests.
+
+Release history lives in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
