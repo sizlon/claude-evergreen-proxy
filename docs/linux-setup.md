@@ -16,7 +16,33 @@ Run the proxy automatically in the background on Linux using a systemd user unit
 > scripts/proxyctl.sh stop
 > ```
 
-## 1. Build the project
+## 1. Authenticate the Claude CLI (headless-friendly)
+
+The proxy has no credentials of its own — it reuses whatever the Claude CLI is
+authenticated with, so the CLI must be logged in once on the server. The normal
+`claude auth login` flow tries to open a browser, but neither option below needs
+one on the server:
+
+- **`claude setup-token`** — prints a URL in the terminal. Open it on any other
+  device (phone, laptop), approve access with your Claude Max account, and paste
+  the resulting code back into the SSH session.
+- **Copy credentials from an already-authenticated Linux machine** — Claude Code
+  stores credentials in `~/.claude/.credentials.json` on Linux. Copy that file to
+  the same path on the server and restrict it to your user:
+
+  ```bash
+  scp other-machine:~/.claude/.credentials.json ~/.claude/
+  chmod 600 ~/.claude/.credentials.json
+  ```
+
+  macOS stores credentials in the Keychain instead of a file, so this route only
+  works Linux → Linux.
+
+Authentication errors are not detected at proxy startup — they surface on the
+first real request, as a `result` message with `is_error: true`. If requests fail
+right after setup, re-check this step.
+
+## 2. Build the project
 
 ```bash
 cd ~/Projects/claude-evergreen-proxy
@@ -24,7 +50,7 @@ npm install
 npm run build
 ```
 
-## 2. Create the unit file
+## 3. Create the unit file
 
 `~/.config/systemd/user/claude-evergreen-proxy.service`:
 
@@ -49,7 +75,7 @@ WantedBy=default.target
 
 Adjust `ExecStart`/`WorkingDirectory` if you cloned the repo elsewhere. `WorkingDirectory` matters: `models.json` is written there by default.
 
-## 3. Enable and start
+## 4. Enable and start
 
 ```bash
 systemctl --user daemon-reload
@@ -62,7 +88,7 @@ To keep the service running when you are not logged in:
 loginctl enable-linger "$USER"
 ```
 
-## 4. Manage the service
+## 5. Manage the service
 
 ```bash
 systemctl --user status claude-evergreen-proxy    # status
@@ -71,7 +97,7 @@ systemctl --user stop claude-evergreen-proxy      # stop
 journalctl --user -u claude-evergreen-proxy -f    # follow logs
 ```
 
-## 5. Verify
+## 6. Verify
 
 ```bash
 curl http://localhost:3456/health

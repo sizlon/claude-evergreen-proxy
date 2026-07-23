@@ -67,6 +67,8 @@ Your App (OpenClaw, Continue.dev, etc.)
    npm install -g @anthropic-ai/claude-code
    claude auth login
    ```
+   On a headless server (no browser), use `claude setup-token` instead — see
+   [docs/linux-setup.md](docs/linux-setup.md#1-authenticate-the-claude-cli-headless-friendly).
 
 ## Installation
 
